@@ -8,6 +8,7 @@ TEXTURE_FILES = {
     "floor": "stone_floor.png",
     "wall": "stone_wall.png",
     "wood": "wood.png",
+    "background": "cave_background.png",
 }
 
 _textures: dict[str, int] = {}
@@ -75,6 +76,7 @@ def load_textures(texture_dir: str | Path | None = None) -> dict[str, int]:
         "floor": ((82, 77, 67), (105, 99, 86), (91, 85, 74), (115, 107, 93)),
         "wall": ((65, 61, 56), (83, 77, 68), (73, 68, 61), (94, 87, 76)),
         "wood": ((83, 48, 24), (111, 68, 35), (95, 57, 29), (126, 78, 39)),
+        "background": ((20, 17, 19), (36, 27, 25), (48, 31, 20), (25, 21, 24)),
     }
 
     loaded: dict[str, int] = {}

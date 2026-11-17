@@ -50,6 +50,72 @@ def draw_box(
 def init_renderer() -> None:
     load_textures()
 
+def draw_background() -> None:
+    texture_id = get_texture("background")
+    if texture_id is None:
+        return
+
+    viewport = glGetIntegerv(GL_VIEWPORT)
+    viewport_width = int(viewport[2])
+    viewport_height = int(viewport[3])
+    if viewport_width <= 0 or viewport_height <= 0:
+        return
+
+    previous_matrix_mode = glGetIntegerv(GL_MATRIX_MODE)
+
+    # Guarda os estados que serão temporariamente modificados pelo fundo.
+    glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT | GL_POLYGON_BIT)
+
+    glMatrixMode(GL_PROJECTION)
+    glPushMatrix()
+    glLoadIdentity()
+    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)
+
+    glMatrixMode(GL_MODELVIEW)
+    glPushMatrix()
+    glLoadIdentity()
+
+    glDisable(GL_DEPTH_TEST)
+    glDepthMask(GL_FALSE)
+    glDisable(GL_LIGHTING)
+    glDisable(GL_CULL_FACE)
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, texture_id)
+    glColor3f(1.0, 1.0, 1.0)
+
+    texture_width = int(glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH))
+    texture_height = int(glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT))
+    image_aspect = texture_width / texture_height
+    viewport_aspect = viewport_width / viewport_height
+
+    u_min = v_min = 0.0
+    u_max = v_max = 1.0
+    if image_aspect > viewport_aspect:
+        visible_width = viewport_aspect / image_aspect
+        u_min = (1.0 - visible_width) / 2.0
+        u_max = 1.0 - u_min
+    else:
+        visible_height = image_aspect / viewport_aspect
+        v_min = (1.0 - visible_height) / 2.0
+        v_max = 1.0 - v_min
+
+    glBegin(GL_QUADS)
+    glTexCoord2f(u_min, v_min)
+    glVertex2f(-1.0, -1.0)
+    glTexCoord2f(u_max, v_min)
+    glVertex2f(1.0, -1.0)
+    glTexCoord2f(u_max, v_max)
+    glVertex2f(1.0, 1.0)
+    glTexCoord2f(u_min, v_max)
+    glVertex2f(-1.0, 1.0)
+    glEnd()
+
+    glMatrixMode(GL_MODELVIEW)
+    glPopMatrix()
+    glMatrixMode(GL_PROJECTION)
+    glPopMatrix()
+    glPopAttrib()
+    glMatrixMode(previous_matrix_mode)
 
 #paralelepípedo com textura nas 6 faces
 def draw_textured_box(
@@ -300,7 +366,7 @@ def configure_scene_lighting(game) -> None:
     glEnable(GL_COLOR_MATERIAL)
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
 
-    # A iluminação ambiente fica baixa para manter a sensação de mina escura.
+    # a iluminação ambiente fica baixa para manter a sensação de mina escura.
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, (0.035, 0.035, 0.045, 1.0))
     glLightfv(GL_LIGHT0, GL_AMBIENT, (0.045, 0.045, 0.055, 1.0))
     glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 0.91, 0.76, 1.0))
@@ -338,6 +404,7 @@ def configure_scene_lighting(game) -> None:
 
 #desenha mina tabuleiro e avatares
 def draw_scene(game, animator=None, now_ms: int = 0) -> None:
+    draw_background()
     configure_scene_lighting(game)
     draw_mine_floor(game)
     draw_tiles(game)
