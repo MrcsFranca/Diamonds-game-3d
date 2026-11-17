@@ -294,21 +294,42 @@ def draw_cave_decorations(game) -> None:
         glPopMatrix()
 
 #coloca luz
-def configure_scene_lighting() -> None:
+def configure_scene_lighting(game) -> None:
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
     glEnable(GL_COLOR_MATERIAL)
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
 
-    # Luz ambiente global evita que faces afastadas da luz fiquem totalmente
-    # pretas, enquanto GL_LIGHT0 fornece direção e contraste aos volumes.
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, (0.24, 0.24, 0.27, 1.0))
-    glLightfv(GL_LIGHT0, GL_AMBIENT, (0.22, 0.22, 0.24, 1.0))
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, (0.95, 0.88, 0.72, 1.0))
-    glLightfv(GL_LIGHT0, GL_SPECULAR, (0.30, 0.30, 0.28, 1.0))
-    # A posição é definida no espaço de câmera porque esta função é chamada
-    # depois de aplicar a transformação da câmera.
-    glLightfv(GL_LIGHT0, GL_POSITION, (2.0, 8.0, 5.0, 1.0))
+    # A iluminação ambiente fica baixa para manter a sensação de mina escura.
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, (0.035, 0.035, 0.045, 1.0))
+    glLightfv(GL_LIGHT0, GL_AMBIENT, (0.045, 0.045, 0.055, 1.0))
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 0.91, 0.76, 1.0))
+    glLightfv(GL_LIGHT0, GL_SPECULAR, (0.30, 0.28, 0.24, 1.0))
+
+    # A luz acompanha o jogador da vez e ilumina sua casa e os tiles próximos.
+    player = game.current_player
+    row, col = player.position
+    x, _, z = tile_position(row, col, game.board_size)
+
+    player_offsets = (
+        (-0.28, -0.28),
+        (0.28, -0.28),
+        (-0.28, 0.28),
+        (0.28, 0.28),
+    )
+    offset_x, offset_z = player_offsets[player.player_id]
+
+    # A posição é definida depois da câmera, portanto o OpenGL a transforma
+    # para o espaço de câmera. O foco aponta verticalmente para o tabuleiro.
+    glLightfv(GL_LIGHT0, GL_POSITION, (x + offset_x, 3.8, z + offset_z, 1.0))
+    glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 55.0)
+    glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 12.0)
+    glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
+
+    # Atenuação: a iluminação perde intensidade conforme se afasta do jogador.
+    glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1.0)
+    glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.10)
+    glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.035)
 
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (0.18, 0.18, 0.18, 1.0))
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.0)
@@ -317,7 +338,7 @@ def configure_scene_lighting() -> None:
 
 #desenha mina tabuleiro e avatares
 def draw_scene(game, animator=None, now_ms: int = 0) -> None:
-    configure_scene_lighting()
+    configure_scene_lighting(game)
     draw_mine_floor(game)
     draw_tiles(game)
     draw_walls(game)

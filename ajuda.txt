@@ -1,0 +1,25 @@
+- preview_scene é a inicialização
+
+python -m unittest -v test_game_logic.py test_player_animation.py test_item_visibility.py: para testes
+
+comunicação:
+user interage -> preview_scene -> game_logic -> atualiza jogo -> retorna moveResult -> interpretação do preview_scene
+    -> player_animation -> renderer -> cena openGL
+    -> ui -> desenha 2d
+-> glutSwapBuffers
+
+progressão do mapa: BOARD_SIZE + map_number - 1
+
+itens são distribuídos aleatoriamento com: rng.sample
+
+_consume_turn(): incrementa o número de ações, incrementa o contador da mina, verifica se a partidade terminou
+
+dicas: Delta r = r_{diamante}-r_{jogador}
+Delta r < 0: norte.
+Delta r > 0: sul.
+Delta c > 0: leste.
+Delta c < 0: oeste.
+dist de manhattan:
+d = |Delta r| + |Delta c|
+
+
